@@ -1,0 +1,159 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf460
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\partightenfactor0
+
+\f0\fs22 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature0 Team 2\
+Zhongyuan Fu\
+Seth Adjei\
+\
+Q1.1\
+db.categories.insert(\{ _id : "MongoDB", parent : "Databases" \})\
+db.categories.insert(\{ _id : "dbm", parent : "Databases" \})\
+db.categories.insert(\{ _id : "Databases", parent : "Programming" \})\
+db.categories.insert(\{ _id : "Languages", parent : "Programming" \})\
+db.categories.insert(\{ _id : "Programming", parent : "Books" \})\
+db.categories.insert(\{ _id : "Books", parent : null \})\
+\
+var parents = [];\
+var stack = [];\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 \kerning1\expnd0\expndtw0 var item = db.\expnd0\expndtw0\kerning0
+categories\kerning1\expnd0\expndtw0 .findOne(\{_id : "MongoDB"\});\expnd0\expndtw0\kerning0
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\partightenfactor0
+\cf0 stack.push(item);\
+var level = 1;\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 \kerning1\expnd0\expndtw0 while(stack.length > 0) \{ var current = stack.pop(); var parent = db.\expnd0\expndtw0\kerning0
+categories\kerning1\expnd0\expndtw0 .find(\{_id : current.parent\}); while (parent.hasNext()) \{ var myparent = parent.next(); var obj = \{Name : myparent._id, Level : level\}; parents.push(obj); stack.push(myparent);\}level++\};\
+\
+printjson(parents)\
+\expnd0\expndtw0\kerning0
+\
+Q1.2\
+var stack = []\
+\kerning1\expnd0\expndtw0 var item = db.\expnd0\expndtw0\kerning0
+categories\kerning1\expnd0\expndtw0 .findOne(\{_id : "Books"\})\
+stack.push(item)\
+var height = 0\
+\
+while (stack.length > 0) \{ height++; var length = stack.length; for (var i = 0; i < length; i++) \{ var current = stack.pop(); var children = db. \expnd0\expndtw0\kerning0
+categories\kerning1\expnd0\expndtw0 .find(\{parent : current._id\}); while (children.hasNext()) \{ var child = children.next(); stack.push(child);\}\}\}\
+\
+print(height)\
+\
+Q1.3\
+db.categories.remove(\{\});\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 db.categories.insert( \{ _id: "MongoDB", children: [] \} )\
+db.categories.insert( \{ _id: "dbm", children: [] \} )\
+db.categories.insert( \{ _id: "Databases", children: [ "MongoDB", "dbm" ] \} )\
+db.categories.insert( \{ _id: "Languages", children: [] \} )\
+db.categories.insert( \{ _id: "Programming", children: [ "Databases", "Languages" ] \} )\
+db.categories.insert( \{ _id: "Books", children: [ "Programming" ] \} )\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+db.categories.find(\{"children" : "dbm"\})\
+\
+Q1.4\
+var stack = [];\
+var item = db.categories.findOne(\{_id : "Books"\});\
+stack.push(item);\
+var descendants = [];\
+\
+while (stack.length > 0) \{\
+	var length = stack.length;\
+	for (var i = 0; i < length; i++) \{\
+		var current = stack.pop();\
+		var children = current.children;\
+		children.forEach(function(child)\{\
+			db.categories.find(\{_id : child\}).forEach(function(item) \{\
+				stack.push(item);\
+				descendants.push(item._id);\
+			\});\
+		\})\
+	\}\
+\}\
+\
+printjson(descendants);\
+\
+Q1.5\
+var siblings = db.categories.findOne(\{"children" : "Databases"\}).children;\
+\
+for (var i = 0; i < siblings.length; i++) \{\
+	if (siblings[i] != "Databases") \{\
+		db.categories.findOne(\{_id : siblings[i]\});\
+	\}\
+\}\
+\
+Q2.1\
+db.test.mapReduce(\
+	function() \{\
+		for (var i = 0; i < this.awards.length; i++) \{\
+			var key = this.awards[i].award;\
+			var value = 1;\
+			emit(key, value);\
+		\}\
+	\},\
+	function(key, values) \{ \
+		return Array.sum(values) \
+	\},\
+	\{\
+		query : \{ awards : \{$exists : true\} \},\
+		out : "award_count",\
+	\} \
+).find()\
+\
+Q2.2\
+db.test.aggregate(\
+	[\
+		\{ $match : \{ birth : \{ $exists : true \} \} \},\
+		\{ $project :\
+	       \{\
+	         birth_year : \{ $year : "$birth" \},\
+	         id : "$_id",\
+	         _id : 0\
+	       \}\
+    	\},\
+		\{ \
+			$group : \{ _id : \{ birth_year : "$birth_year" \},\
+				array_of_ids : \{ $push: \{ id : "$id" \} \}\
+\
+			\}\
+		\}\
+	]\
+)\
+\
+Q2.3\
+db.test.aggregate(\
+	[\
+		\{\
+			$group : \{\
+				_id : "",\
+				largest_id : \{ $max : "$_id" \},\
+				smallest_id : \{ $min : "$_id" \}\
+			\}\
+		\},\
+		\{\
+			$project: \{ largest_id: 1, smallest_id: 1, _id: 0 \}\
+		\}\
+	]\
+)\
+\
+Q2.4\
+db.test.createIndex(\{ "awards.award": "text" \})\
+db.test.find( \{ $text: \{ $search: "\\"Turing Award\\""\} \} ).pretty()\
+\
+Q2.5\
+db.test.find( \{ $text: \{ $search: "National Turing"\} \} ).pretty()\
+\
+\expnd0\expndtw0\kerning0
+\
+}
